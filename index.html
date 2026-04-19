@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ADIRU · Pro Crypto Wallet | Swap · UPI · Zero Tax</title>
+  <!-- Google Fonts + Font Awesome 6 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Three.js for Premium 3D Background -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+      }
+    }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      background: #03060F;
+      color: #F1F5F9;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 3D Canvas Background - Ultra Pro Dynamic Nebula */
+    #three-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Main App Container - Glassmorphic + Opening Animation */
+    .wallet-app {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(8, 14, 26, 0.75);
+      backdrop-filter: blur(20px);
+      border-radius: 48px;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 140, 66, 0.15);
+      height: 90vh;
+      max-height: 780px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transform: scale(0.96) translateY(20px);
+      opacity: 0;
+      animation: appOpen 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+      transition: transform 0.2s ease;
+    }
+
+    @keyframes appOpen {
+      0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(30px);
+        backdrop-filter: blur(0px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        backdrop-filter: blur(20px);
+      }
+    }
+
+    /* Custom scrollbar */
+    .wallet-app::-webkit-scrollbar { width: 4px; }
+    .wallet-app::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+    .wallet-app::-webkit-scrollbar-thumb { background: #FF8C42; border-radius: 10px; }
+
+    /* Status Bar + Header */
+    .status-bar {
+      padding: 20px 24px 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+      color: #CBD5E1;
+      background: transparent;
+    }
+    .main-header {
+      padding: 8px 24px 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .logo-area h1 {
+      font-size: 34px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FFFFFF, #FFB347, #FF5E7E);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -1px;
+    }
+    .badge-pro {
+      font-size: 10px;
+      background: rgba(255, 140, 66, 0.3);
+      padding: 4px 10px;
+      border-radius: 40px;
+      font-weight: 600;
+    }
+
+    /* Balance Card Premium */
+    .balance-card {
+      background: rgba(20, 28, 48, 0.5);
+      backdrop-filter: blur(12px);
+      margin: 20px 24px;
+      border-radius: 44px;
+      padding: 24px 20px;
+      border: 1px solid rgba(255, 140, 66, 0.3);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.4);
+    }
+    .balance-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #94A3B8;
+      letter-spacing: 1px;
+    }
+    .balance-value {
+      font-size: 40px;
+      font-weight: 800;
+      margin: 8px 0 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .inr { background: linear-gradient(120deg, #FFF, #FFBC7A); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .usd { font-size: 1rem; color: #A0AEC0; font-weight: 500; }
+    .rate-info { font-size: 11px; color: #7E8A9B; margin-top: 6px; }
+
+    /* Action Grid - Send/Receive/Buy/Swap(Convert) */
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .action-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,140,66,0.3);
+      border-radius: 60px;
+      padding: 12px 0;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: white;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .action-btn i { font-size: 20px; }
+    .action-btn-primary {
+      background: linear-gradient(95deg, #FF8C42, #FF5E7E);
+      border: none;
+      box-shadow: 0 8px 18px rgba(255, 92, 80, 0.3);
+    }
+    .action-btn-highlight {
+      background: linear-gradient(95deg, #8B5CF6, #3B82F6);
+      border: none;
+      box-shadow: 0 8px 18px rgba(59,130,246,0.3);
+    }
+    .action-btn:active { transform: scale(0.96); }
+
+    /* UPI Card Double */
+    .upi-pro-card {
+      background: linear-gradient(135deg, rgba(46,125,50,0.2), rgba(0,0,0,0.3));
+      margin: 0 24px 20px 24px;
+      padding: 14px 20px;
+      border-radius: 36px;
+      border: 1px solid #4CAF50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-upi {
+      background: #2E7D32;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    /* Tax Banner - No Tax Hook */
+    .tax-banner {
+      background: linear-gradient(95deg, #1E293B, #0F172A);
+      margin: 0 24px 20px 24px;
+      padding: 12px 16px;
+      border-radius: 28px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      border-left: 4px solid #FFB347;
+    }
+
+    /* Assets List */
+    .assets-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 24px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .token-list {
+      padding: 0 16px 20px 16px;
+    }
+    .token-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 20, 36, 0.6);
+      backdrop-filter: blur(4px);
+      margin-bottom: 10px;
+      padding: 12px 16px;
+      border-radius: 32px;
+      transition: 0.2s;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .token-left { display: flex; align-items: center; gap: 14px; }
+    .token-icon { width: 46px; height: 46px; background: #1F2A44; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; }
+    .token-info h4 { font-size: 1rem; font-weight: 700; }
+    .network-badge { font-size: 0.6rem; background: #1E2A3A; padding: 2px 8px; border-radius: 30px; display: inline-block; margin-top: 4px; }
+    .token-balance { text-align: right; }
+    .crypto-amount { font-weight: 700; font-size: 0.9rem; }
+    .inr-small { font-size: 0.7rem; color: #9CA3AF; }
+
+    /* Transaction History */
+    .history-section { margin: 8px 24px 30px; }
+    .history-item {
+      background: rgba(0,0,0,0.35);
+      border-radius: 24px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Bottom Tab */
+    .bottom-tab {
+      background: rgba(8, 12, 24, 0.95);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-between;
+      margin-top: auto;
+      padding: 12px 24px 22px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .tab-item {
+      text-align: center;
+      font-size: 12px;
+      color: #6C7A8F;
+      cursor: pointer;
+      flex: 1;
+      transition: 0.2s;
+    }
+    .tab-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+    .tab-item.active { color: #FF8C42; transform: translateY(-2px); }
+
+    /* Modals Ultra Pro */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #12182C;
+      max-width: 340px;
+      width: 85%;
+      border-radius: 56px;
+      padding: 28px;
+      border: 1px solid #FF8C42;
+      box-shadow: 0 30px 40px rgba(0,0,0,0.6);
+      animation: modalPop 0.25s ease;
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-content input, .modal-content select {
+      width: 100%;
+      padding: 14px;
+      margin: 12px 0;
+      background: #1E293B;
+      border: none;
+      border-radius: 60px;
+      color: white;
+      font-size: 15px;
+    }
+    .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1E293B;
+      padding: 12px 24px;
+      border-radius: 60px;
+      z-index: 1100;
+      display: none;
+      border-left: 4px solid #4CAF50;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    /* Mobile only adjustments */
+    @media (min-width: 550px) {
+      body { background: #03060F; }
+      .wallet-app { height: 90vh; max-height: 800px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="three-canvas"></canvas>
+  <div class="wallet-app">
+    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i class="fas fa-battery-full"></i></span></div>
+    <div class="main-header">
+      <div class="logo-area"><h1>ADIRU</h1><div class="badge-pro">PRO • SELF-CUSTODY</div></div>
+      <i class="fas fa-shield-alt" style="font-size: 22px; color:#FFB347;"></i>
+    </div>
+
+    <div id="walletView">
+      <!-- Balance Card -->
+      <div class="balance-card">
+        <div class="balance-label">TOTAL PORTFOLIO (INR)</div>
+        <div class="balance-value"><span class="inr" id="totalINR">₹ 0</span><span class="usd" id="totalUSD">($0 USD)</span></div>
+        <div class="rate-info"><i class="fas fa-chart-line"></i> 1 USD = <span id="usdInrRate">83.50</span> INR • Live FX</div>
+        <div class="action-grid">
+          <div class="action-btn" id="sendBtn"><i class="fas fa-paper-plane"></i><span>Send</span></div>
+          <div class="action-btn" id="receiveBtn"><i class="fas fa-qrcode"></i><span>Receive</span></div>
+          <div class="action-btn" id="buyBtn"><i class="fas fa-shopping-cart"></i><span>Buy</span></div>
+          <div class="action-btn action-btn-highlight" id="swapBtn"><i class="fas fa-exchange-alt"></i><span>Swap</span></div>
+        </div>
+      </div>
+
+      <!-- UPI Card -->
+      <div class="upi-pro-card">
+        <div><i class="fas fa-phone-alt" style="color:#4CAF50;"></i> <strong>UPI Pay</strong> • Instant</div>
+        <div><button class="btn-upi" id="upiSendBtn"><i class="fas fa-paper-plane"></i> Send</button><button class="btn-upi" id="upiAddBtn"><i class="fas fa-plus-circle"></i> Add</button></div>
+      </div>
+
+      <!-- Zero Tax Banner -->
+      <div class="tax-banner">
+        <i class="fas fa-check-circle" style="color:#4CAF50;"></i> <strong>🚫 ZERO TAX DEDUCTION BY ADIRU</strong> — No TDS, No Capital Gains Tax deducted. You stay in full control. <span style="color:#FFB347;">#TaxFree</span>
+      </div>
+
+      <div class="assets-header"><span><i class="fas fa-coins"></i> 20+ Networks</span><span>Start from zero</span></div>
+      <div class="token-list" id="tokenList"></div>
+
+      <div class="history-section"><div style="font-weight:700; margin-bottom:12px;"><i class="fas fa-history"></i> Recent Activity</div><div id="transactionList"></div></div>
+    </div>
+
+    <div id="discoverView" style="display:none; text-align:center; padding:60px 24px;"><i class="fas fa-chart-network" style="font-size:48px;"></i><h3 style="margin-top:16px;">Web3 Universe</h3><p>Staking, NFT Gallery & Cross-chain Bridge — Coming Soon</p></div>
+    <div id="settingsView" style="display:none; padding:40px 24px;"><h3><i class="fas fa-gavel"></i> Tax & Legal</h3><p>As per Indian regulations, crypto gains may be taxable. <strong>ADIRU is non-custodial and never deducts any tax</strong>. No TDS, no transaction fees. Users self-report. Full transparency.</p><hr style="margin:20px 0; opacity:0.2;"><p><i class="fas fa-globe"></i> Real-time USD/INR rate from market oracles.</p></div>
+
+    <div class="bottom-tab">
+      <div class="tab-item active" data-tab="wallet"><i class="fas fa-wallet"></i><span>Wallet</span></div>
+      <div class="tab-item" data-tab="discover"><i class="fas fa-compass"></i><span>Discover</span></div>
+      <div class="tab-item" data-tab="settings"><i class="fas fa-file-contract"></i><span>Tax Rules</span></div>
+    </div>
+  </div>
+
+  <div id="genericModal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalBody"></div><div class="modal-buttons"><button id="modalConfirmBtn" style="background:#FF8C42;">Confirm</button><button id="modalCancelBtn">Cancel</button></div></div></div>
+  <div id="toastMsg" class="toast"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    // Ultra Pro 3D Background: rotating crystalline torus + glowing particles
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x03060F);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.2, 10);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // Lights
+    const ambient = new THREE.AmbientLight(0x222244);
+    scene.add(ambient);
+    const mainLight = new THREE.DirectionalLight(0xffaa88, 1);
+    mainLight.position.set(2, 3, 4);
+    scene.add(mainLight);
+    const pointLight = new THREE.PointLight(0xff5533, 0.8);
+    pointLight.position.set(1, 2, 2);
+    scene.add(pointLight);
+    
+    // Core object: advanced torus knot + ring
+    const knotGeo = new THREE.TorusKnotGeometry(1.1, 0.22, 180, 24, 3, 4);
+    const knotMat = new THREE.MeshStandardMaterial({ color: 0xff8844, emissive: 0x441100, metalness: 0.85, roughness: 0.25 });
+    const knot = new THREE.Mesh(knotGeo, knotMat);
+    scene.add(knot);
+    
+    const ringGeo = new THREE.TorusGeometry(1.7, 0.05, 128, 200);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x331100 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    scene.add(ring);
+    
+    // Floating particles
+    const particleCount = 1400;
+    const particlesGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      positions[i*3] = (Math.random() - 0.5) * 28;
+      positions[i*3+1] = (Math.random() - 0.5) * 16;
+      positions[i*3+2] = (Math.random() - 0.5) * 20 - 8;
+    }
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({ color: 0xffaa77, size: 0.05, transparent: true, opacity: 0.45 });
+    const particles = new THREE.Points(particlesGeo, particleMat);
+    scene.add(particles);
+    
+    let time = 0;
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      time += 0.007;
+      knot.rotation.y = time * 0.4;
+      knot.rotation.x = Math.sin(time * 0.5) * 0.2;
+      ring.rotation.z = time * 0.3;
+      particles.rotation.y = time * 0.03;
+      camera.position.x += (0 - camera.position.x) * 0.02;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    }
+    animate3D();
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+
+  <script type="text/javascript">
+    // --------------------------------------------------------------
+    // ADIRU ULTRA PRO WALLET - Zero Balance, UPI, SWAP/CONVERT, Animation
+    // --------------------------------------------------------------
+    let usdInrRate = 83.50;
+    let assets = [
+      { name: "Indian Rupee", symbol: "INR", network: "UPI / Bank", icon: "₹", balance: 0, inrPrice: 1 },
+      { name: "Bitcoin", symbol: "BTC", network: "Bitcoin", icon: "₿", balance: 0, inrPrice: 5250000 },
+      { name: "Ethereum", symbol: "ETH", network: "Ethereum", icon: "Ξ", balance: 0, inrPrice: 184500 },
+      { name: "Solana", symbol: "SOL", network: "Solana", icon: "◎", balance: 0, inrPrice: 13200 },
+      { name: "Polygon", symbol: "MATIC", network: "Polygon", icon: "🟣", balance: 0, inrPrice: 71.5 },
+      { name: "BNB", symbol: "BNB", network: "BSC", icon: "⛓️", balance: 0, inrPrice: 43000 },
+      { name: "Ripple", symbol: "XRP", network: "XRP", icon: "✴️", balance: 0, inrPrice: 52 },
+      { name: "Dogecoin", symbol: "DOGE", network: "Dogecoin", icon: "🐕", balance: 0, inrPrice: 11.4 },
+      { name: "Cardano", symbol: "ADA", network: "Cardano", icon: "₳", balance: 0, inrPrice: 35.2 }
+    ];
+    
+    let transactions = [];
+    
+    function formatINR(amt) { return "₹ " + amt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function computeTotalINR() { return assets.reduce((sum, a) => sum + (a.balance * a.inrPrice), 0); }
+    function updateUSDRate() {
+      usdInrRate = 83.50 + (Math.sin(Date.now() / 9000) * 0.45);
+      document.getElementById('usdInrRate').innerText = usdInrRate.toFixed(2);
+      const total = computeTotalINR();
+      document.getElementById('totalINR').innerText = formatINR(total);
+      document.getElementById('totalUSD').innerHTML = `($${(total / usdInrRate).toFixed(2)} USD)`;
+    }
+    
+    function renderUI() {
+      const total = computeTotalINR();
+      document.getElementById('totalINR').innerText = formatINR(total);
+      document.getElementById('totalUSD').innerHTML = `($${(total / usdInrRate).toFixed(2)} USD)`;
+      const container = document.getElementById('tokenList');
+      if (!container) return;
+      container.innerHTML = '';
+      assets.forEach(asset => {
+        const cryptoAmount = asset.balance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+        const inrVal = asset.balance * asset.inrPrice;
+        const div = document.createElement('div');
+        div.className = 'token-item';
+        div.innerHTML = `
+          <div class="token-left"><div class="token-icon">${asset.icon}</div><div class="token-info"><h4>${asset.name} (${asset.symbol})</h4><div class="network-badge">${asset.network}</div></div></div>
+          <div class="token-balance"><div class="crypto-amount">${cryptoAmount} ${asset.symbol}</div><div class="inr-small">${formatINR(inrVal)}</div></div>
+        `;
+        container.appendChild(div);
+      });
+      renderTransactions();
+    }
+    
+    function renderTransactions() {
+      const histDiv = document.getElementById('transactionList');
+      if (!histDiv) return;
+      if (transactions.length === 0) { histDiv.innerHTML = '<div style="text-align:center; color:#7E8A9B;">✨ No transactions yet</div>'; return; }
+      histDiv.innerHTML = transactions.slice().reverse().map(tx => `
+        <div class="history-item">
+          <span><i class="fas ${tx.type === 'send' ? 'fa-arrow-up' : (tx.type === 'swap' ? 'fa-exchange-alt' : 'fa-arrow-down')}"></i> ${tx.type.toUpperCase()} ${tx.amount} ${tx.asset}</span>
+          <span>${formatINR(tx.inr)}</span>
+          <small>${tx.date}</small>
+        </div>
+      `).join('');
+    }
+    
+    function addTransaction(type, assetSymbol, amount, inrValue) {
+      transactions.unshift({ type, asset: assetSymbol, amount: amount.toFixed(6), inr: inrValue, date: new Date().toLocaleTimeString() });
+      if (transactions.length > 18) transactions.pop();
+      renderTransactions();
+    }
+    
+    function updateAssetBalance(symbol, delta) {
+      const asset = assets.find(a => a.symbol === symbol);
+      if (!asset) return false;
+      const newBal = asset.balance + delta;
+      if (newBal < 0) return false;
+      asset.balance = newBal;
+      renderUI();
+      return true;
+    }
+    
+    // Modal helpers
+    let currentCallback = null;
+    function showModal(title, bodyHtml, onConfirm) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalBody').innerHTML = bodyHtml;
+      currentCallback = onConfirm;
+      document.getElementById('genericModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('genericModal').style.display = 'none'; currentCallback = null; }
+    function showToast(msg) { const t = document.getElementById('toastMsg'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2600); }
+    document.getElementById('modalConfirmBtn').onclick = () => { if (currentCallback) currentCallback(); closeModal(); };
+    document.getElementById('modalCancelBtn').onclick = closeModal;
+    
+    // ========== SWAP / CONVERT (Ultra Visible) ==========
+    function swapConvert() {
+      const cryptoAssets = assets.filter(a => a.symbol !== 'INR' && a.balance > 0);
+      if (cryptoAssets.length === 0) { showToast("No crypto balance to swap. Add funds via UPI first."); return; }
+      const fromOptions = cryptoAssets.map(a => `<option value="${a.symbol}">${a.name} (${a.symbol}) | Bal: ${a.balance.toFixed(6)}</option>`).join('');
+      showModal('Swap / Convert', `
+        <select id="swapFrom">${fromOptions}</select>
+        <i class="fas fa-arrow-down" style="margin:8px auto; display:block; text-align:center;"></i>
+        <select id="swapTo">${assets.filter(a => a.symbol !== 'INR').map(a => `<option value="${a.symbol}">${a.name} (${a.symbol})</option>`).join('')}</select>
+        <input type="number" id="swapAmount" placeholder="Amount to swap">
+        <p style="font-size:11px; margin-top:6px;">Rate: real market (simulated)</p>
+      `, () => {
+        const fromSym = document.getElementById('swapFrom').value;
+        const toSym = document.getElementById('swapTo').value;
+        let amount = parseFloat(document.getElementById('swapAmount').value);
+        if (isNaN(amount) || amount <= 0) { showToast("Invalid amount"); return; }
+        const fromAsset = assets.find(a => a.symbol === fromSym);
+        const toAsset = assets.find(a => a.symbol === toSym);
+        if (!fromAsset || fromAsset.balance < amount) { showToast("Insufficient balance"); return; }
+        if (fromSym === toSym) { showToast("Cannot swap same asset"); return; }
+        // calculate estimated output using INR bridge
+        const inrValue = amount * fromAsset.inrPrice;
+        const toAmount = inrValue / toAsset.inrPrice;
+        updateAssetBalance(fromSym, -amount);
+        updateAssetBalance(toSym, toAmount);
+        addTransaction('swap', `${fromSym}→${toSym}`, `${amount} → ${toAmount.toFixed(6)}`, inrValue);
+        showToast(`Swapped ${amount} ${fromSym} to ${toAmount.toFixed(6)} ${toSym}`);
+      });
+    }
+    
+    // Send Crypto
+    function sendCrypto() {
+      const nonZero = assets.filter(a => a.symbol !== 'INR' && a.balance > 0);
+      if (nonZero.length === 0 && assets.find(a=>a.symbol==='INR')?.balance===0) { showToast("No balance to send. Add funds."); return; }
+      const options = assets.filter(a => a.symbol !== 'INR').map(a => `<option value="${a.symbol}">${a.name} (${a.symbol}) | ${a.balance.toFixed(6)}</option>`).join('');
+      showModal('Send Crypto', `<select id="sendAssetSel">${options}</select><input type="number" id="sendAmt" placeholder="Amount"><input id="sendAddr" placeholder="Recipient address">`, () => {
+        const sym = document.getElementById('sendAssetSel').value;
+        const amount = parseFloat(document.getElementById('sendAmt').value);
+        const addr = document.getElementById('sendAddr').value;
+        if (isNaN(amount) || amount <= 0) { showToast("Invalid amount"); return; }
+        const asset = assets.find(a => a.symbol === sym);
+        if (!asset || asset.balance < amount) { showToast("Insufficient balance"); return; }
+        if (!addr) { showToast("Address required"); return; }
+        const inrVal = amount * asset.inrPrice;
+        updateAssetBalance(sym, -amount);
+        addTransaction('send', sym, amount, inrVal);
+        showToast(`Sent ${amount} ${sym} to ${addr.slice(0,8)}...`);
+      });
+    }
+    
+    function receiveCrypto() {
+      const options = assets.filter(a => a.symbol !== 'INR').map(a => `<option value="${a.symbol}">${a.name}</option>`).join('');
+      showModal('Receive (Simulate)', `<select id="recAssetSel">${options}</select><input type="number" id="recAmount" placeholder="Amount to receive">`, () => {
+        const sym = document.getElementById('recAssetSel').value;
+        const amount = parseFloat(document.getElementById('recAmount').value);
+        if (isNaN(amount) || amount <= 0) { showToast("Invalid amount"); return; }
+        const asset = assets.find(a => a.symbol === sym);
+        if (asset) {
+          const inrVal = amount * asset.inrPrice;
+          updateAssetBalance(sym, amount);
+          addTransaction('receive', sym, amount, inrVal);
+          showToast(`Received ${amount} ${sym}`);
+        }
+      });
+    }
+    
+    function buyWithINR() {
+      const inrAsset = assets.find(a => a.symbol === 'INR');
+      if (!inrAsset || inrAsset.balance <= 0) { showToast("Add INR via UPI first"); return; }
+      const cryptoList = assets.filter(a => a.symbol !== 'INR').map(a => `<option value="${a.symbol}">${a.name} (₹${a.inrPrice.toFixed(2)})</option>`).join('');
+      showModal('Buy Crypto with INR', `<select id="buyAssetSel">${cryptoList}</select><input type="number" id="inrAmountBuy" placeholder="Amount in INR">`, () => {
+        const symbol = document.getElementById('buyAssetSel').value;
+        const inrAmount = parseFloat(document.getElementById('inrAmountBuy').value);
+        if (isNaN(inrAmount) || inrAmount <= 0) { showToast("Invalid INR amount"); return; }
+        const asset = assets.find(a => a.symbol === symbol);
+        const inrLocal = assets.find(a => a.symbol === 'INR');
+        if (!inrLocal || inrLocal.balance < inrAmount) { showToast("Insufficient INR balance"); return; }
+        const cryptoAmount = inrAmount / asset.inrPrice;
+        updateAssetBalance('INR', -inrAmount);
+        updateAssetBalance(symbol, cryptoAmount);
+        addTransaction('buy', symbol, cryptoAmount, inrAmount);
+        showToast(`Bought ${cryptoAmount.toFixed(6)} ${symbol}`);
+      });
+    }
+    
+    // UPI Actions
+    function upiSendMoney() {
+      const inr = assets.find(a => a.symbol === 'INR');
+      if (!inr || inr.balance <= 0) { showToast("No INR to send. Add via UPI first."); return; }
+      showModal('Send UPI', `<input id="upiTarget" placeholder="UPI ID (e.g., user@okhdfc)"><input type="number" id="upiAmountSend" placeholder="Amount (INR)">`, () => {
+        const upiId = document.getElementById('upiTarget').value.trim();
+        const amount = parseFloat(document.getElementById('upiAmountSend').value);
+        if (!upiId) { showToast("Valid UPI ID required"); return; }
+        if (isNaN(amount) || amount <= 0) { showToast("Invalid amount"); return; }
+        const inrAsset = assets.find(a => a.symbol === 'INR');
+        if (!inrAsset || inrAsset.balance < amount) { showToast("Insufficient balance"); return; }
+        updateAssetBalance('INR', -amount);
+        addTransaction('send', 'INR (UPI)', amount, amount);
+        showToast(`Sent ₹${amount} to ${upiId}`);
+      });
+    }
+    function upiAddFunds() {
+      showModal('Add Money via UPI', `<input type="number" id="addUpiAmount" placeholder="Amount in INR"><div style="background:#1E293B; border-radius:24px; padding:12px; margin-top:12px;">UPI ID: <strong>adiru@okhdfc</strong><br>Instant credit simulation</div>`, () => {
+        const amount = parseFloat(document.getElementById('addUpiAmount').value);
+        if (isNaN(amount) || amount <= 0) { showToast("Invalid amount"); return; }
+        updateAssetBalance('INR', amount);
+        addTransaction('receive', 'INR (UPI)', amount, amount);
+        showToast(`₹${amount} added via UPI!`);
+      });
+    }
+    
+    // Event bindings
+    document.getElementById('sendBtn').onclick = sendCrypto;
+    document.getElementById('receiveBtn').onclick = receiveCrypto;
+    document.getElementById('buyBtn').onclick = buyWithINR;
+    document.getElementById('swapBtn').onclick = swapConvert;
+    document.getElementById('upiSendBtn').onclick = upiSendMoney;
+    document.getElementById('upiAddBtn').onclick = upiAddFunds;
+    
+    // Tabs
+    const tabs = document.querySelectorAll('.tab-item');
+    const walletDiv = document.getElementById('walletView');
+    const discoverDiv = document.getElementById('discoverView');
+    const settingsDiv = document.getElementById('settingsView');
+    function setActiveTab(tab) {
+      walletDiv.style.display = 'none'; discoverDiv.style.display = 'none'; settingsDiv.style.display = 'none';
+      if (tab === 'wallet') walletDiv.style.display = 'block';
+      if (tab === 'discover') discoverDiv.style.display = 'block';
+      if (tab === 'settings') settingsDiv.style.display = 'block';
+      tabs.forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab-item[data-tab="${tab}"]`).classList.add('active');
+    }
+    tabs.forEach(t => t.addEventListener('click', () => setActiveTab(t.getAttribute('data-tab'))));
+    setActiveTab('wallet');
+    
+    renderUI();
+    updateUSDRate();
+    setInterval(() => { updateUSDRate(); renderUI(); }, 3800);
+    showToast("🔥 ADIRU Pro | Zero tax, Swap ready, UPI active");
+  </script>
+</body>
+</html>
